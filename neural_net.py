@@ -21,8 +21,6 @@ T=1.0
 
 data_params=dict(L=L,dt=dt,NT=int(T/dt))
 
-
-
 def main(_):
 
   # Import data
