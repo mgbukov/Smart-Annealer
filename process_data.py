@@ -25,13 +25,11 @@ class DataSet(object):
 		if dtype == dtypes.float32:
 			# Convert from [0, 255] -> [0.0, 1.0].
 			data_X = data_X.astype(np.float32)
-			data_X = np.multiply(data_X, 1.0 / 255.0)
+			data_X = np.multiply(data_X+4.0, 1.0 / 8.0)
 		self._data_X = data_X
 		self._data_Y = np.reshape(data_Y,(data_Y.shape[0],1))
 		self._epochs_completed = 0
 		self._index_in_epoch = 0
-		#print(self._data_Y.shape)
-		#exit()
 
 	@property
 	def data_X(self):
@@ -49,7 +47,9 @@ class DataSet(object):
 	def epochs_completed(self):
 		return self._epochs_completed
 
-	def next_batch(self, batch_size):
+	def next_batch(self, batch_size, seed=None):
+		if seed:
+			np.random.seed(seed)
 		"""Return the next `batch_size` examples from this data set."""
 
 		start = self._index_in_epoch
