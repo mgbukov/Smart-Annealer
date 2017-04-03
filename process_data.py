@@ -26,6 +26,7 @@ class DataSet(object):
 			# Convert from [0, 255] -> [0.0, 1.0].
 			data_X = data_X.astype(np.float32)
 			data_X = np.multiply(data_X+4.0, 1.0 / 8.0)
+			#data_X = np.multiply(data_X, 1.0 / 4.0)
 		self._data_X = data_X
 		self._data_Y = np.reshape(data_Y,(data_Y.shape[0],1))
 		self._epochs_completed = 0
@@ -70,20 +71,22 @@ class DataSet(object):
 		return self._data_X[start:end], self._data_Y[start:end]
 
 
-def read_data_sets(data_params, dtype=dtypes.float32, validation_size=5000):
+def read_data_sets(data_params, dtype=dtypes.float32,train_size=80000,validation_size=5000):
 
 	file = 'data/protocols_L-'+str(data_params['L'])+'_dt-'+str(data_params['dt']).replace('.','p')+'_NT-'+str(data_params['NT'])+'.pkl'
+	
+
 	with open(file,'rb') as data_file:
 		Data=pickle.load(data_file) 
 		data_file.close()
 
 	
 	# define test and train data sets
-	train_data_X=Data[0][:80000]
-	train_data_Y=Data[1][:80000]
+	train_data_X=Data[0][:train_size]
+	train_data_Y=Data[1][:train_size]
 
-	test_data_X=Data[0][80000:]
-	test_data_Y=Data[1][80000:]
+	test_data_X=Data[0][train_size:]
+	test_data_Y=Data[1][train_size:]
 
 	if not 0 <= validation_size <= len(train_data_X):
 		raise ValueError('Validation size should be between 0 and {}. Received: {}.'.format(len(train_data_X), validation_size))

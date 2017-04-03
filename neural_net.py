@@ -5,6 +5,7 @@ import sys
 import argparse
 
 import process_data
+from linreg import Linear_Regression
 
 import tensorflow as tf
 seed=12
@@ -13,41 +14,73 @@ tf.set_random_seed(seed)
 
 
 def main(_):
+
+    training_epochs=1000
+    ckpt_freq=200000 # define inverse check pointing frequency
+
+    n_samples=10000
+    train_size=8000
+    validation_size=5000
+    batch_size=200
+    
+    # ADAM learning params
+    learning_rate=0.001 # learning rate
+    beta1=0.9
+    beta2=0.9999
+    epsilon=1e-09
+
+    opt_params=dict(learning_rate=learning_rate,beta1=beta1,beta2=beta2,epsilon=epsilon)
+    #opt_params=dict(learning_rate=learning_rate)
+    param_str='/lr=%0.4f' %(learning_rate)
+
     # Import data
-    protocols=process_data.read_data_sets(data_params)
+    protocols=process_data.read_data_sets(data_params,train_size=train_size,validation_size=validation_size)
 
-    # Create the model
-    x = tf.placeholder(tf.float32, [None, 100])
-    W = tf.Variable(tf.zeros([100,1]))
-    b = tf.Variable(tf.zeros([1]))
-    y = tf.matmul(x, W) + b #tf.minimum(tf.maximum( , -1) ,1)
+    # define model
+    model=Linear_Regression(max_t_steps,batch_size,opt_params)
 
-    # Define loss and optimizer
-    y_ = tf.placeholder(tf.float32, [None, 1])
+    
+    saver = tf.train.Saver() # defaults to saving all variables
+    with tf.Session() as sess:
 
+        """
+        # restore most recent session from checkpoint directory
+        ckpt = tf.train.get_checkpoint_state(os.path.dirname('checkpoints/checkpoint'))
+        if ckpt and ckpt.model_checkpoint_path:
+            saver.restore(sess, ckpt.model_checkpoint_path) 
+        """
 
-    #cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
-    cross_entropy = tf.reduce_mean( tf.nn.l2_loss(y-y_))
-    #train_step = tf.train.GradientDescentOptimizer(0.0001).minimize(cross_entropy)
-    train_step = tf.train.AdamOptimizer(learning_rate=0.01, beta1=0.8, beta2=0.9999, epsilon=1e-08).minimize(cross_entropy)
+        # Step 7: initialize the necessary variables, in this case, w and b
+        sess.run(tf.global_variables_initializer())
 
-    sess = tf.InteractiveSession()
+        average_loss = 0.0
+        # write summary
+        #writer = tf.summary.FileWriter('./ising_reg'+param_str, sess.graph)
 
-    tf.global_variables_initializer().run()
+        # Step 8: train the model
+        for index in range(training_epochs): 
 
+            batch_X, batch_Y = protocols.train.next_batch(batch_size,seed=seed)
 
-    # Train
-    for _ in range(1000):
-        batch_xs, batch_ys = protocols.train.next_batch(200,seed=seed)
-        sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+            loss_batch, _, summary = sess.run([model.loss, model.optimizer, model.summary_op],
+                                                feed_dict={model.X: batch_X,model.Y: batch_Y} )
+            # count training step
+            step = sess.run(model.global_step)
+            
+            # add summary data to writer
+            #writer.add_summary(summary, global_step=step)
 
-    print(sess.run( cross_entropy  , feed_dict={x: batch_xs, y_: batch_ys}))
-    #exit()
+            average_loss += loss_batch
+            if (index + 1) % ckpt_freq == 0:
+                saver.save(sess, './checkpoints/ising_reg', global_step=step)
 
-    # Test trained model
-    #correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-    #accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-    print(sess.run(  [y,y_] , feed_dict={x: protocols.test.data_X[9236:9238], y_: protocols.test.data_Y[9236:9238]}))
+            print(sess.run( model.loss, feed_dict={model.X: batch_X,model.Y: batch_Y}))
+
+        # Step 9: test model
+        print(sess.run(model.loss, feed_dict={model.X: protocols.test.data_X, model.Y: protocols.test.data_Y}) )
+        print(sess.run(  [model.Y,model.Y_predicted] , feed_dict={model.X: protocols.test.data_X[9236:9238], model.Y: protocols.test.data_Y[9236:9238]}))
+       
+
 
     
 if __name__ == '__main__':
