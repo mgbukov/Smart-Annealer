@@ -17,12 +17,15 @@ class Linear_Regression(object):
 		
 		self.n_feats=n_feats
 		self.n_samples=n_samples
+
 		if len(n_hidden):
 			self.hidden=True
 			self.n_hidden_1=n_hidden[0]
 			self.n_hidden_2=n_hidden[1]
 		else:
 			self.hidden=False
+
+		self.dropout_keepprob=0.9
 
 		# Step 1: create placeholders for input X and label Y
 		self._create_placeholders()
@@ -50,10 +53,12 @@ class Linear_Regression(object):
 				self.W1 = tf.Variable( tf.random_normal(shape=(self.n_feats,self.n_hidden_1), ),dtype=tf.float32, name="weight_1")
 				self.b1 = tf.Variable( tf.random_normal(shape=[self.n_hidden_1]), name="bias_1")
 				self.layer_1 = tf.nn.relu( tf.add( tf.matmul(self.X,self.W1), self.b1 ) )
+				self.layer_1=tf.nn.dropout(self.layer_1,keep_prob=self.dropout_keepprob)
 				# hidden layer 2
 				self.W2 = tf.Variable( tf.random_normal(shape=(self.n_hidden_1,self.n_hidden_2), ),dtype=tf.float32, name="weight_2")
 				self.b2 = tf.Variable(tf.random_normal(shape=[self.n_hidden_2]), name="bias_2")
 				self.layer_2 = tf.nn.relu( tf.add( tf.matmul(self.layer_1,self.W2), self.b2 ) )
+				self.layer_2=tf.nn.dropout(self.layer_2,keep_prob=self.dropout_keepprob)
 				# output layer
 				self.W = tf.Variable( tf.random_normal(shape=(self.n_hidden_2,1), ),dtype=tf.float32, name="weight_out")
 				self.b = tf.Variable(tf.random_normal(shape=[1]), name="bias_out")
@@ -72,7 +77,9 @@ class Linear_Regression(object):
 		with tf.name_scope('loss'):
 			#self.loss = tf.reduce_sum(tf.pow(self.Y - self.Y_predicted, 2))/(2.0*self.n_samples)
 			self.loss = tf.reduce_mean( tf.nn.l2_loss(self.Y - self.Y_predicted)) \
-						+ 1.98*tf.reduce_mean( tf.abs(self.W) )
+						+ 1.0*tf.reduce_mean( tf.abs(self.W1) ) \
+						+ 1.0*tf.reduce_mean( tf.abs(self.W2) ) \
+						+ 1.0*tf.reduce_mean( tf.abs(self.W) )
 			
 	def _create_optimiser(self,kwargs):
 		with tf.name_scope('optimiser'):

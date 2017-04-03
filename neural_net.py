@@ -15,7 +15,7 @@ tf.set_random_seed(seed)
 
 def main(_):
 
-    training_epochs=10000
+    training_epochs=30000
     ckpt_freq=200000 # define inverse check pointing frequency
 
     n_samples=100000
@@ -78,14 +78,15 @@ def main(_):
             if (index + 1) % ckpt_freq == 0:
                 saver.save(sess, './checkpoints/fid_reg', global_step=step)
 
-            print(loss_batch/batch_size)
+            print(index,loss_batch/batch_size)
         
-        print(sess.run(model.loss, feed_dict={model.X: protocols.train.data_X, model.Y: protocols.train.data_Y}))
+        print(sess.run(model.loss/train_size, feed_dict={model.X: protocols.train.data_X, model.Y: protocols.train.data_Y}))
 
         # Step 9: test model
-        print(sess.run(model.loss, feed_dict={model.X: protocols.test.data_X, model.Y: protocols.test.data_Y}) )
+        print(sess.run(model.loss/(n_samples-train_size), feed_dict={model.X: protocols.test.data_X, model.Y: protocols.test.data_Y}) )
         print(sess.run(  [model.Y,model.Y_predicted] , feed_dict={model.X: protocols.test.data_X[9236:9238], model.Y: protocols.test.data_Y[9236:9238]}))
-       
+        print(sess.run( [tf.reduce_min( tf.abs(model.Y-model.Y_predicted) ),tf.reduce_max( tf.abs(model.Y-model.Y_predicted))], feed_dict={model.X: protocols.test.data_X, model.Y: protocols.test.data_Y}))
+              
 
 
     
