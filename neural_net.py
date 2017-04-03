@@ -15,19 +15,19 @@ tf.set_random_seed(seed)
 
 def main(_):
 
-    training_epochs=1000
+    training_epochs=10000
     ckpt_freq=200000 # define inverse check pointing frequency
 
-    n_samples=10000
-    train_size=8000
+    n_samples=100000
+    train_size=80000
     validation_size=5000
     batch_size=200
     
     # ADAM learning params
     learning_rate=0.001 # learning rate
     beta1=0.9
-    beta2=0.9999
-    epsilon=1e-09
+    beta2=0.8
+    epsilon=1e-08
 
     opt_params=dict(learning_rate=learning_rate,beta1=beta1,beta2=beta2,epsilon=epsilon)
     #opt_params=dict(learning_rate=learning_rate)
@@ -37,7 +37,10 @@ def main(_):
     protocols=process_data.read_data_sets(data_params,train_size=train_size,validation_size=validation_size)
 
     # define model
-    model=Linear_Regression(max_t_steps,batch_size,opt_params)
+    n_hidden_1=400
+    n_hidden_2=60
+    #model=Linear_Regression(max_t_steps,batch_size,opt_params)
+    model=Linear_Regression(max_t_steps,batch_size,opt_params,n_hidden=(n_hidden_1,n_hidden_2))
 
     
     saver = tf.train.Saver() # defaults to saving all variables
@@ -55,7 +58,7 @@ def main(_):
 
         average_loss = 0.0
         # write summary
-        #writer = tf.summary.FileWriter('./ising_reg'+param_str, sess.graph)
+        #writer = tf.summary.FileWriter('./fid_reg'+param_str, sess.graph)
 
         # Step 8: train the model
         for index in range(training_epochs): 
@@ -66,15 +69,18 @@ def main(_):
                                                 feed_dict={model.X: batch_X,model.Y: batch_Y} )
             # count training step
             step = sess.run(model.global_step)
+
             
             # add summary data to writer
             #writer.add_summary(summary, global_step=step)
 
-            average_loss += loss_batch
+            average_loss += loss_batch/batch_size
             if (index + 1) % ckpt_freq == 0:
-                saver.save(sess, './checkpoints/ising_reg', global_step=step)
+                saver.save(sess, './checkpoints/fid_reg', global_step=step)
 
-            print(sess.run( model.loss, feed_dict={model.X: batch_X,model.Y: batch_Y}))
+            print(loss_batch/batch_size)
+        
+        print(sess.run(model.loss, feed_dict={model.X: protocols.train.data_X, model.Y: protocols.train.data_Y}))
 
         # Step 9: test model
         print(sess.run(model.loss, feed_dict={model.X: protocols.test.data_X, model.Y: protocols.test.data_Y}) )
