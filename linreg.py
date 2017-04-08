@@ -22,6 +22,7 @@ class Linear_Regression(object):
 			self.hidden=True
 			self.n_hidden_1=n_hidden[0]
 			self.n_hidden_2=n_hidden[1]
+			#self.n_hidden_3=n_hidden[2]
 		else:
 			self.hidden=False
 
@@ -59,6 +60,13 @@ class Linear_Regression(object):
 				self.b2 = tf.Variable(tf.random_normal(shape=[self.n_hidden_2]), name="bias_2")
 				self.layer_2 = tf.nn.relu( tf.add( tf.matmul(self.layer_1,self.W2), self.b2 ) )
 				self.layer_2=tf.nn.dropout(self.layer_2,keep_prob=self.dropout_keepprob)
+				"""
+				# hidden layer 3
+				self.W3 = tf.Variable( tf.random_normal(shape=(self.n_hidden_2,self.n_hidden_3), ),dtype=tf.float32, name="weight_3")
+				self.b3 = tf.Variable(tf.random_normal(shape=[self.n_hidden_3]), name="bias_3")
+				self.layer_3 = tf.nn.relu( tf.add( tf.matmul(self.layer_2,self.W3), self.b3 ) )
+				self.layer_3=tf.nn.dropout(self.layer_3,keep_prob=self.dropout_keepprob)
+				"""
 				# output layer
 				self.W = tf.Variable( tf.random_normal(shape=(self.n_hidden_2,1), ),dtype=tf.float32, name="weight_out")
 				self.b = tf.Variable(tf.random_normal(shape=[1]), name="bias_out")
@@ -77,9 +85,11 @@ class Linear_Regression(object):
 		with tf.name_scope('loss'):
 			#self.loss = tf.reduce_sum(tf.pow(self.Y - self.Y_predicted, 2))/(2.0*self.n_samples)
 			self.loss = tf.reduce_mean( tf.nn.l2_loss(self.Y - self.Y_predicted)) \
+						+ 1.0*tf.reduce_mean( tf.abs(self.W) ) \
 						+ 1.0*tf.reduce_mean( tf.abs(self.W1) ) \
-						+ 1.0*tf.reduce_mean( tf.abs(self.W2) ) \
-						+ 1.0*tf.reduce_mean( tf.abs(self.W) )
+						+ 1.0*tf.reduce_mean( tf.abs(self.W2) )
+
+						  
 			
 	def _create_optimiser(self,kwargs):
 		with tf.name_scope('optimiser'):
