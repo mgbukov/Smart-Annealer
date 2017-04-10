@@ -73,7 +73,7 @@ class DataSet(object):
 
 def read_data_sets(data_params, dtype=dtypes.float32,train_size=80000,validation_size=5000):
 
-	file = 'data/protocols_L-'+str(data_params['L'])+'_dt-'+str(data_params['dt']).replace('.','p')+'_NT-'+str(data_params['NT'])+'.pkl'
+	file = '../data/protocols_L-'+str(data_params['L'])+'_dt-'+str(data_params['dt']).replace('.','p')+'_NT-'+str(data_params['NT'])+'.pkl'
 	
 
 	with open(file,'rb') as data_file:

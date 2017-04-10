@@ -23,21 +23,18 @@ my_dir = str2[n-1]
 
 N_samples=100000
 
-max_t_steps = 100 
-delta_time = 0.01
+max_t_steps = 30 
+delta_time = 0.05
 
 # define model params
 L = 2 # system size
 if L==1:
 	J = 0.0 # required by PBC
-	hz = 1.0
-	hx_i= -1.0 # initial hx coupling
-	hx_f= +1.0 # final hx coupling
 else:
-	J = -1.0 #/0.809 # zz interaction
-	hz = 1.0 #0.9045/0.809 #1.0 # hz field
-	hx_i= -2.0 # initial hx coupling
-	hx_f= +2.0 # final hx coupling
+	J = 1.0 #/0.809 # zz interaction
+hz = 1.0 #0.9045/0.809 #1.0 # hz field
+hx_i= -2.0 # initial hx coupling
+hx_f= +2.0 # final hx coupling
 
 # define dynamic params of H(t)
 b=hx_i
@@ -76,7 +73,8 @@ state_i=[-4.0]
 Hamiltonian.Unitaries(delta_time,L,J,hz,8.0,4.0,-4.0,state_i,save=True,save_str='_bang')
 
 # define time vector
-times=delta_time*np.arange(0.0,max_t_steps,max_t_steps*delta_time)
+times=delta_time*np.arange(max_t_steps)
+
 
 Protocols=np.zeros((N_samples,len(times)))
 Fidelities=np.zeros((N_samples,))
@@ -84,12 +82,12 @@ for i in range(N_samples):
 	# calculate random protocol
 	protocol = [4.0*random.choice([-1.0, 1.0]) for i in range(len(times))]
 
-	Fidelities[i] = Hamiltonian.MB_observables(psi_i,times,protocol,[8],-4.0,L,J=1.0,hx_i=2.0,hx_f=-2.0,hz=1.0,bang=True,psi_target=psi_target)
+	Fidelities[i] = Hamiltonian.MB_observables(psi_i,times,protocol,[8],-4.0,L,J=J,hx_i=hx_i,hx_f=hx_f,hz=hz,bang=True,psi_target=psi_target)
 	Protocols[i,:]=protocol
-	print(i)
+	print(i,Fidelities[i])
 
 # save data
-with open(my_dir + '/data/protocols_L-'+str(L)+'_dt-'+str(delta_time).replace('.','p')+'_NT-'+str(max_t_steps)+'.pkl','wb') as f:
+with open(my_dir + '../data/protocols_L-'+str(L)+'_dt-'+str(delta_time).replace('.','p')+'_NT-'+str(max_t_steps)+'.pkl','wb') as f:
 	expm_dict = pickle.dump([Protocols,Fidelities],f)
 
 
