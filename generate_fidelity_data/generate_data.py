@@ -78,17 +78,25 @@ times=delta_time*np.arange(max_t_steps)
 
 Protocols=np.zeros((N_samples,len(times)))
 Fidelities=np.zeros((N_samples,))
+Fidelities_DQN=np.zeros((N_samples,len(times)))
 for i in range(N_samples):
 	# calculate random protocol
 	protocol = [4.0*random.choice([-1.0, 1.0]) for i in range(len(times))]
 
 	Fidelities[i] = Hamiltonian.MB_observables(psi_i,times,protocol,[8],-4.0,L,J=J,hx_i=hx_i,hx_f=hx_f,hz=hz,bang=True,psi_target=psi_target)
 	Protocols[i,:]=protocol
-	print(i,Fidelities[i])
+	for j in range(len(times)):
+		protocol_new=protocol.copy()
+		protocol_new[j]=-protocol_new[j]
+
+		Fidelities_DQN[i,j] = Hamiltonian.MB_observables(psi_i,times,protocol_new,[8],-4.0,L,J=J,hx_i=hx_i,hx_f=hx_f,hz=hz,bang=True,psi_target=psi_target)
+
+	print(i)
 
 # save data
-with open(my_dir + '../data/protocols_L-'+str(L)+'_dt-'+str(delta_time).replace('.','p')+'_NT-'+str(max_t_steps)+'.pkl','wb') as f:
-	expm_dict = pickle.dump([Protocols,Fidelities],f)
+with open(my_dir + '/../data/protocols_L-'+str(L)+'_dt-'+str(delta_time).replace('.','p')+'_NT-'+str(max_t_steps)+'.pkl','wb') as f:
+	expm_dict = pickle.dump([Protocols,Fidelities,Fidelities_DQN],f)
+
 
 
 

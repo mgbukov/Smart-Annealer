@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # define number of samples 
     N_samples=100000
-    max_t_steps = 100 # total number of time steps per protocol
+    max_t_steps = 30 # total number of time steps per protocol
 
     L=2 #spin chain system size
     dt=0.05 # time step

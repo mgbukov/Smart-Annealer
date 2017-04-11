@@ -74,7 +74,6 @@ class DataSet(object):
 def read_data_sets(data_params, dtype=dtypes.float32,train_size=80000,validation_size=5000):
 
 	file = '../data/protocols_L-'+str(data_params['L'])+'_dt-'+str(data_params['dt']).replace('.','p')+'_NT-'+str(data_params['NT'])+'.pkl'
-	
 
 	with open(file,'rb') as data_file:
 		Data=pickle.load(data_file) 
@@ -83,10 +82,10 @@ def read_data_sets(data_params, dtype=dtypes.float32,train_size=80000,validation
 	
 	# define test and train data sets
 	train_data_X=Data[0][:train_size]
-	train_data_Y=Data[1][:train_size]
+	train_data_Y=Data[2][:train_size]
 
 	test_data_X=Data[0][train_size:]
-	test_data_Y=Data[1][train_size:]
+	test_data_Y=Data[2][train_size:]
 
 	if not 0 <= validation_size <= len(train_data_X):
 		raise ValueError('Validation size should be between 0 and {}. Received: {}.'.format(len(train_data_X), validation_size))
